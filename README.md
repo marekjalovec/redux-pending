@@ -11,7 +11,7 @@ Install via npm:
     $ npm install --save redux-pending
 
 ## Usage 
-First off, we add include our `promiseMiddleware` into our store's middleware. We also add the `pendingReducer` to our reducers. It's important that the reducer is under the root `pending` property in the state (but is configurable, see `isPending` method).
+First off, we include our `promiseMiddleware` into our store's middleware. We also add the `pendingReducer` to our reducers. It's important that the reducer is under the root `pending` property in the state (but is configurable, see `isPending` method).
 
 ```js
 import { applyMiddleware, createStore, combineReducers } from "redux";
@@ -45,20 +45,22 @@ const reducers = combineReducers({
 const store = finalCreateStore(reducers);
 ```
 
-Now that we have our middleware and reducer in place, we need an action that dispatches a promise. Here we have an example that dispatches an `API.fetchTodos` promise as a Flux Standard Action which will fetch the Todos from the server. Two actions are dispatched here. An action with the type plus `_PENDING` appended e.g. `PENDING_FETCH_TODOS` immediately to signify the promise has started execution and is waiting to return. The next is `FETCH_TODOS` when the promise's execution completes with the `payload` as the return value. If the promise fails, the `payload` will be the error caught and an `error` flag will be added to the action. See [Flux Standard Actions](https://github.com/acdlite/flux-standard-action).
+Now that we have our middleware and reducer in place, we need an action that dispatches a promise. Here we have an example that dispatches an `API.fetchTodos` promise as a Flux Standard Action which will fetch the Todos from the server. Two actions are dispatched here. An action with the type plus `PENDING_` prepended e.g. `PENDING_FETCH_TODOS` immediately to signify the promise has started execution and is waiting to return. You don't have to handle this one, `pendingReducer` does this for you. The next is `FETCH_TODOS` when the promise's execution completes with the `payload` as the return value. If the promise fails, the `payload` will be the error caught and an `error` flag will be added to the action. See [Flux Standard Actions](https://github.com/acdlite/flux-standard-action).
 
 ```js
 const FETCH_TODOS = 'FETCH_TODOS';
 
 const fetchTodos = () => {
     type: FETCH_TODOS,
-    payload: pending(API.fetchTodos())
+    payload: API.fetchTodos() // this has to be a Promise
 };
 ```
 
 Now we move onto our component where we connect our Redux state. We want our component to display a `Loading` screen if our todos are loading from the server. We do that by using the handy selector function `isPending` which will determine from our `pending` state the status of our dispatched promise. We connect that selector to our component in the `mapStateToProps` argument in the `connect` function from the `react-redux` bindings under the prop `todosLoading`. This flag will toggle according to the status of the dispatched promise.
 
 ```js
+import { isPending } from 'redux-pending';
+
 class App extends Component {
     componentWillMount() {
         // Dispatch our promise action
